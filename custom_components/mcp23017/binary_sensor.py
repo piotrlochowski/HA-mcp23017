@@ -18,10 +18,12 @@ from .const import (
     CONF_FLOW_PIN_NUMBER,
     CONF_FLOW_PLATFORM,
     CONF_I2C_ADDRESS,
+    CONF_I2C_BUS,
     CONF_INVERT_LOGIC,
     CONF_PINS,
     CONF_PULL_MODE,
     DEFAULT_I2C_ADDRESS,
+    DEFAULT_I2C_BUS,
     DEFAULT_INVERT_LOGIC,
     DEFAULT_PULL_MODE,
     DOMAIN,
@@ -41,6 +43,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
             vol.Upper, vol.In([MODE_UP, MODE_DOWN])
         ),
         vol.Optional(CONF_I2C_ADDRESS, default=DEFAULT_I2C_ADDRESS): vol.Coerce(int),
+        vol.Optional(CONF_I2C_BUS, default=DEFAULT_I2C_BUS): vol.Coerce(int),
     }
 )
 
@@ -62,6 +65,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
                     CONF_FLOW_PIN_NUMBER: pin_number,
                     CONF_FLOW_PIN_NAME: pin_name,
                     CONF_I2C_ADDRESS: config[CONF_I2C_ADDRESS],
+                    CONF_I2C_BUS: config[CONF_I2C_BUS],
                     CONF_INVERT_LOGIC: config[CONF_INVERT_LOGIC],
                     CONF_PULL_MODE: config[CONF_PULL_MODE],
                 },
@@ -95,6 +99,7 @@ class MCP23017BinarySensor(BinarySensorEntity):
         self._device = None
 
         self._i2c_address = config_entry.data[CONF_I2C_ADDRESS]
+        self._i2c_bus = config_entry.data[CONF_I2C_BUS]
         self._pin_name = config_entry.data[CONF_FLOW_PIN_NAME]
         self._pin_number = config_entry.data[CONF_FLOW_PIN_NUMBER]
 
@@ -144,7 +149,8 @@ class MCP23017BinarySensor(BinarySensorEntity):
     @property
     def unique_id(self):
         """Return a unique_id for this entity."""
-        return f"{self._device.unique_id}-0x{self._pin_number:02x}"
+        # _LOGGER.info(f"Device unique ID{self._device.unique_id}@pin{self._pin_number}")
+        return f"{self._device.unique_id}@pin{self._pin_number}"
 
     @property
     def should_poll(self):
@@ -170,12 +176,16 @@ class MCP23017BinarySensor(BinarySensorEntity):
     def address(self):
         """Return the i2c address of the entity."""
         return self._i2c_address
+    @property
+    def bus(self):
+        """Return the i2c bus of the entity."""
+        return self._i2c_bus
 
     @property
     def device_info(self):
         """Device info."""
         return {
-            "identifiers": {(DOMAIN, self._i2c_address)},
+            "identifiers": {(DOMAIN, self._i2c_bus, self._i2c_address)},
             "manufacturer": "Microchip",
             "model": "MCP23017",
             "entry_type": DeviceEntryType.SERVICE,
@@ -189,6 +199,10 @@ class MCP23017BinarySensor(BinarySensorEntity):
     @device.setter
     def device(self, value):
         """Set device property."""
+        _LOGGER.info(
+            "Set switch device property '%s'",
+            value,
+        )
         self._device = value
 
     @callback

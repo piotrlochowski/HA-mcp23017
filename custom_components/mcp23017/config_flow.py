@@ -10,10 +10,12 @@ from .const import (
     CONF_FLOW_PIN_NUMBER,
     CONF_FLOW_PLATFORM,
     CONF_I2C_ADDRESS,
+    CONF_I2C_BUS,
     CONF_INVERT_LOGIC,
     CONF_PULL_MODE,
     CONF_HW_SYNC,
     DEFAULT_I2C_ADDRESS,
+    DEFAULT_I2C_BUS,
     DEFAULT_INVERT_LOGIC,
     DEFAULT_PULL_MODE,
     DEFAULT_HW_SYNC,
@@ -32,16 +34,18 @@ class Mcp23017ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_PUSH
 
     def _title(self, user_input):
-        return "0x%02x:pin %d ('%s':%s)" % (
+        return "Bus: %d, address: 0x%02x, pin: %d (%s.%s)" % (
+            user_input[CONF_I2C_BUS],
             user_input[CONF_I2C_ADDRESS],
             user_input[CONF_FLOW_PIN_NUMBER],
-            user_input[CONF_FLOW_PIN_NAME],
             user_input[CONF_FLOW_PLATFORM],
+            user_input[CONF_FLOW_PIN_NAME],
         )
 
     def _unique_id(self, user_input):
-        return "%s.%d.%d" % (
+        return "%s.%d.%d.%d" % (
             DOMAIN,
+            user_input[CONF_I2C_BUS],
             user_input[CONF_I2C_ADDRESS],
             user_input[CONF_FLOW_PIN_NUMBER],
         )
@@ -74,7 +78,8 @@ class Mcp23017ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             self._abort_if_unique_id_configured()
 
             if CONF_FLOW_PIN_NAME not in user_input:
-                user_input[CONF_FLOW_PIN_NAME] = "pin 0x%02x:%d" % (
+                user_input[CONF_FLOW_PIN_NAME] = "pin %d:0x%02x:%d" % (
+                    user_input[CONF_I2C_BUS],
                     user_input[CONF_I2C_ADDRESS],
                     user_input[CONF_FLOW_PIN_NUMBER],
                 )
@@ -83,7 +88,6 @@ class Mcp23017ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 title=self._title(user_input),
                 data=user_input,
             )
-
         return self.async_show_form(
             step_id="user",
             data_schema=vol.Schema(
@@ -91,6 +95,9 @@ class Mcp23017ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     vol.Required(
                         CONF_I2C_ADDRESS, default=DEFAULT_I2C_ADDRESS
                     ): vol.All(vol.Coerce(int), vol.Range(min=0, max=127)),
+                    vol.Required(
+                        CONF_I2C_BUS, default=DEFAULT_I2C_BUS
+                    ): vol.All(vol.Coerce(int), vol.Range(min=0, max=5)),
                     vol.Required(CONF_FLOW_PIN_NUMBER, default=0): vol.All(
                         vol.Coerce(int), vol.Range(min=0, max=15)
                     ),
