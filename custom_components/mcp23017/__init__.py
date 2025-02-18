@@ -207,7 +207,7 @@ async def async_get_or_create(hass, config_entry, entity):
 
 def i2c_device_exist(address):
     try:
-        smbus2.SMBus(DEFAULT_I2C_BUS).read_byte(address)
+        smbus2.SMBus(CONF_I2C_BUS).read_byte(address)
     except (FileNotFoundError, OSError) as error:
         return False
     return True
