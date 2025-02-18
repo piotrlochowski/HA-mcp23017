@@ -11,6 +11,7 @@ MCP23008/MCP23017 implementation for Home Assistant (HA)
   - Polling per device instead of per entity/8x gain, register cache to avoid read-modify-write/3xgain or rewriting the same register value)
 - Synchronization with the device state at startup, e.g. avoid output glitches when HA restart.
 - Compatible with **MCP23008** device (8 pins variant).
+- Support of multiple **I2C** busses (default bus number is 1). Instruction how to enable multiple busses at RPI 4: https://forums.raspberrypi.com/viewtopic.php?t=271200
 
 ## Installation
 
@@ -37,6 +38,7 @@ MCP23008/MCP23017 implementation for Home Assistant (HA)
 
 binary_sensor:
   - platform: mcp23017
+    i2c_bus: 1
     i2c_address: 0x26
     pins:
       8 : Button_0
@@ -69,3 +71,25 @@ switch:
       2 : Output_6
       3 : Output_7
 ```
+
+
+## Configuration of multiple I2C busses:
+
+```yaml
+# Multiple I2C busses configuration.yaml
+
+binary_sensor:
+  - platform: mcp23017
+#    i2c_bus: 1 default one
+    i2c_address: 0x20
+    pins:
+      1 : Button_1@bus1
+      
+  - platform: mcp23017
+    i2c_bus: 2
+    i2c_address: 0x20
+    invert_logic: true
+    pins:
+      1: Button_1@bus2
+```
+
